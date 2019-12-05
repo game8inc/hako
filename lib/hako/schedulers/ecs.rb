@@ -626,6 +626,12 @@ module Hako
       # @return [Hash]
       def create_definition(name, container)
         environment = container.env.map { |k, v| { name: k, value: v } }
+        user = container.user
+        # Set user to '0' if not specified, otherwise a new task definition is
+        # always registered because user is set to '0' on a firelens container.
+        # If a user other than root is specified on a firelens container,
+        # registering a task definition fails.
+        user ||= '0' if container.firelens_configuration
         {
           name: name,
           image: container.image_tag,
@@ -645,7 +651,7 @@ module Hako
           linux_parameters: container.linux_parameters,
           depends_on: container.depends_on,
           volumes_from: container.volumes_from,
-          user: container.user,
+          user: user,
           log_configuration: container.log_configuration,
           health_check: container.health_check,
           ulimits: container.ulimits,
@@ -653,6 +659,7 @@ module Hako
           readonly_root_filesystem: container.readonly_root_filesystem,
           docker_security_options: container.docker_security_options,
           system_controls: container.system_controls,
+          firelens_configuration: container.firelens_configuration,
         }
       end
 
