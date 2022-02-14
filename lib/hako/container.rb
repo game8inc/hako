@@ -100,8 +100,20 @@ module Hako
         {
           log_driver: conf.fetch('log_driver'),
           options: conf.fetch('options'),
-          secret_options: conf.fetch('secret_options', nil)
+          secret_options: log_configuration_secrets
         }
+      end
+    end
+
+    # @return [Array<Hash>, nil]
+    def log_configuration_secrets
+      if log_configuration && @definition['log_configuration'].key?('secret_options')
+        @definition['log_configuration'].fetch('secret_options').map do |secret|
+          {
+            name: secret.fetch('name'),
+            value_from: secret.fetch('value_from'),
+          }
+        end
       end
     end
 
