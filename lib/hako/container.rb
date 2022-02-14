@@ -100,6 +100,12 @@ module Hako
         {
           log_driver: conf.fetch('log_driver'),
           options: conf.fetch('options'),
+          secret_options: conf.key?('secrets') ? conf.fetch('secrets').map do |secret|
+              {
+                name: secret.fetch('name'),
+                value_from: secret.fetch('value_from'),
+              }
+            end : nil
         }
       end
     end
