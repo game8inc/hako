@@ -107,8 +107,8 @@ module Hako
 
     # @return [Array<Hash>, nil]
     def log_configuration_secrets
-      if log_configuration && @definition['log_configuration'].key?('secret_options')
-        @definition['log_configuration'].fetch('secret_options').map do |secret|
+      if log_configuration && @definition['log_configuration'].key?('secrets')
+        @definition['log_configuration'].fetch('secrets').map do |secret|
           {
             name: secret.fetch('name'),
             value_from: secret.fetch('value_from'),
