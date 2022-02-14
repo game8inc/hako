@@ -47,6 +47,7 @@ module Hako
           struct.member(:docker_security_options, Schema::Nullable.new(Schema::UnorderedArray.new(Schema::String.new)))
           struct.member(:system_controls, Schema::Nullable.new(system_controls_schema))
           struct.member(:repository_credentials, Schema::Nullable.new(repository_credentials_schema))
+          struct.member(:firelens_configuration, Schema::Nullable.new(firelens_configuration_schema))
         end
       end
 
@@ -184,9 +185,16 @@ module Hako
         end
       end
 
+<<<<<<< HEAD
       def repository_credentials_schema
         Schema::Structure.new.tap do |struct|
           struct.member(:credentials_parameter, Schema::String.new)
+=======
+      def firelens_configuration_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:type, Schema::String.new)
+          struct.member(:options, Schema::Nullable.new(Schema::Table.new(Schema::String.new, Schema::String.new)))
+>>>>>>> 1f1fd36f04109938a5a9a7eaa4510e6e248e0ea5
         end
       end
     end
