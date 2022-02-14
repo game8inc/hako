@@ -85,6 +85,7 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:log_driver, Schema::String.new)
           struct.member(:options, Schema::Table.new(Schema::String.new, Schema::String.new))
+          struct.member(:secret_options, Schema::Nullable.new(Schema::UnorderedArray.new(secrets_schema)))
         end
       end
 
