@@ -218,6 +218,7 @@ module Hako
       if @definition.key?('repository_credentials')
         {
           credentials_parameter: @definition['repository_credentials'].fetch('credentials_parameter'),
+        }
       end
     end
 
