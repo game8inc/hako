@@ -100,7 +100,7 @@ module Hako
         {
           log_driver: conf.fetch('log_driver'),
           options: conf.fetch('options'),
-          secret_options: conf.fetch('secret_options')
+          secret_options: conf.fetch('secret_options', nil)
         }
       end
     end
