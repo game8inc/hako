@@ -72,7 +72,22 @@ module Hako
         @execution_role_arn = options.fetch('execution_role_arn', nil)
         @cpu = options.fetch('cpu', nil)
         @memory = options.fetch('memory', nil)
+        if options.key?('ephemeral_storage')
+          ephemeral_storage = options.fetch('ephemeral_storage')
+          if ephemeral_storage.key?('size_in_gi_b')
+            @ephemeral_storage = {
+              size_in_gi_b: ephemeral_storage.fetch('size_in_gi_b')
+            }
+          end
+        end
         @requires_compatibilities = options.fetch('requires_compatibilities', nil)
+        if options.key?('runtime_platform')
+          runtime_platform = options.fetch('runtime_platform')
+          @runtime_platform = {
+            cpu_architecture: runtime_platform.fetch('cpu_architecture', nil),
+            operating_system_family: runtime_platform.fetch('operating_system_family', nil),
+          }
+        end
         @launch_type = options.fetch('launch_type', nil)
         if options.key?('capacity_provider_strategy')
           @capacity_provider_strategy = options.fetch('capacity_provider_strategy').map do |strategy|
@@ -515,6 +530,12 @@ module Hako
         if actual_definition.requires_compatibilities != @requires_compatibilities
           return true
         end
+        if actual_definition.runtime_platform != @runtime_platform
+          return true
+        end
+        if actual_definition.ephemeral_storage != @ephemeral_storage
+          return true
+        end
 
         actual_tags_set = Set.new(actual_tags.map { |t| { key: t.key, value: t.value } })
         tags_set = Set.new(@tags)
@@ -555,8 +576,10 @@ module Hako
             container_definitions: definitions,
             volumes: volumes_definition,
             requires_compatibilities: @requires_compatibilities,
+            runtime_platform: @runtime_platform,
             cpu: @cpu,
             memory: @memory,
+            ephemeral_storage: @ephemeral_storage,
             tags: @tags.empty? ? nil : @tags,
           ).task_definition
           [true, new_task_definition]
@@ -591,8 +614,10 @@ module Hako
               container_definitions: definitions,
               volumes: volumes_definition,
               requires_compatibilities: @requires_compatibilities,
+              runtime_platform: @runtime_platform,
               cpu: @cpu,
               memory: @memory,
+              ephemeral_storage: @ephemeral_storage,
               tags: @tags.empty? ? nil : @tags,
             ).task_definition
             return [true, new_task_definition]
@@ -626,6 +651,23 @@ module Hako
               # ECS API doesn't allow 'labels' to be an empty hash.
               labels: configuration['labels'],
               scope: configuration['scope'],
+            }
+          elsif volume.key?('efs_volume_configuration')
+            configuration = volume['efs_volume_configuration']
+            authorization_config =
+              if configuration.key?('authorization_config')
+                ac = configuration['authorization_config']
+                {
+                  access_point_id: ac['access_point_id'],
+                  iam: ac['iam'],
+                }
+              end
+            definition[:efs_volume_configuration] = {
+              file_system_id: configuration.fetch('file_system_id'),
+              root_directory: configuration['root_directory'],
+              transit_encryption: configuration['transit_encryption'],
+              transit_encryption_port: configuration['transit_encryption_port'],
+              authorization_config: authorization_config,
             }
           else
             # When neither 'host' nor 'docker_volume_configuration' is
@@ -683,6 +725,7 @@ module Hako
           docker_security_options: container.docker_security_options,
           system_controls: container.system_controls,
           repository_credentials: container.repository_credentials,
+          resource_requirements: container.resource_requirements,
           firelens_configuration: container.firelens_configuration,
         }
       end
@@ -923,7 +966,7 @@ module Hako
         warn_placement_policy_change(current_service)
         warn_service_registries_change(current_service)
         if service_changed?(current_service, params)
-          ecs_client.update_service(params).service
+          ecs_client.update_service(**params).service
         else
           :noop
         end
@@ -959,7 +1002,7 @@ module Hako
           @service_discovery.apply
           params[:service_registries] = @service_discovery.service_registries
         end
-        ecs_client.create_service(params).service
+        ecs_client.create_service(**params).service
       end
 
       # @param [Aws::ECS::Types::Service] service
@@ -1193,6 +1236,7 @@ module Hako
       # @return [nil]
       def print_volume_definition_in_cli_format(definition)
         return if definition.dig(:docker_volume_configuration, :autoprovision)
+        return if definition[:efs_volume_configuration]
         # From version 1.20.0 of ECS agent, a local volume is provisioned when
         # 'host' is specified without 'source_path'.
         return if definition.dig(:host, :source_path)
@@ -1284,6 +1328,7 @@ module Hako
               opts = dev[:host_path]
               opts += ":#{dev[:container_path]}" if dev[:container_path]
               if dev[:permissions]
+                opts += ':'
                 dev[:permissions].each do |permission|
                   opts += permission[0] if %w[read write mknod].include?(permission)
                 end
@@ -1329,7 +1374,7 @@ module Hako
             when 'NONE'
               cmd << '--no-healthcheck'
             when 'CMD', 'CMD-SHELL'
-              health_check_command = definition[:health_check][:command][1..-1].join(' ')
+              health_check_command = definition[:health_check][:command][1..].join(' ')
               cmd << '--health-cmd' << health_check_command.inspect
             else
               raise "Health check command type #{health_check_command_type} is not supported. CMD, CMD-SHELL and NONE are supported."

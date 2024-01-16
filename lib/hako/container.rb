@@ -228,6 +228,19 @@ module Hako
       end
     end
 
+    # @return [Array, nil]
+    def resource_requirements
+      if @definition.key?('resource_requirements')
+        @definition['resource_requirements'].map do |rr|
+          {
+            type: rr.fetch('type'),
+            value: rr.fetch('value'),
+          }
+        end
+      end
+    end
+
+    # @return [Hash, nil]
     def firelens_configuration
       if @definition.key?('firelens_configuration')
         conf = @definition['firelens_configuration']

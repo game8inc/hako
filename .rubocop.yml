@@ -2,7 +2,7 @@ inherit_from: .rubocop_todo.yml
 
 AllCops:
   DisplayCopNames: true
-  TargetRubyVersion: 2.5
+  TargetRubyVersion: 2.6
   NewCops: disable
 
 Layout/FirstArgumentIndentation:
@@ -36,6 +36,8 @@ Style/PercentLiteralDelimiters:
     '%i': '[]'
 Style/RaiseArgs:
   EnforcedStyle: compact
+Style/RedundantCondition:
+  Enabled: false
 Style/SignalException:
   Enabled: false
 Style/SoleNestedConditional:

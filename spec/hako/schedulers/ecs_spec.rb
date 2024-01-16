@@ -91,12 +91,15 @@ RSpec.describe Hako::Schedulers::Ecs do
         docker_security_options: nil,
         system_controls: nil,
         repository_credentials: nil,
-        firelens_configuration: nil
+        resource_requirements: nil,
+        firelens_configuration: nil,
       }],
       volumes: [],
       requires_compatibilities: nil,
+      runtime_platform: nil,
       cpu: nil,
       memory: nil,
+      ephemeral_storage: nil,
       tags: nil,
     }
   end
@@ -299,7 +302,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           end
         }
         allow(elb_v2_client).to receive(:describe_listeners).with(load_balancer_arn: load_balancer_arn) {
-          Aws::ElasticLoadBalancingV2::Types::DescribeListenersOutput.new(listeners: listeners).extend(Aws::PageableResponse).tap do |output|
+          Aws::PageableResponse.apply(Aws::ElasticLoadBalancingV2::Types::DescribeListenersOutput.new(listeners: listeners)).tap do |output|
             output.pager = double('Aws::Pager', truncated?: false)
           end
         }
@@ -432,7 +435,7 @@ RSpec.describe Hako::Schedulers::Ecs do
             condition: 'EQ',
           ],
         ) do
-          services = Aws::ServiceDiscovery::Types::ListServicesResponse.new(services: service_discovery_services).extend(Aws::PageableResponse)
+          services = Aws::PageableResponse.apply(Aws::ServiceDiscovery::Types::ListServicesResponse.new(services: service_discovery_services))
           services.pager = double('Aws::Pager', truncated?: false)
           services
         end.exactly(4).times
