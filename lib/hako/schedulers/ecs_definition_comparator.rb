@@ -193,17 +193,17 @@ module Hako
         end
       end
 
-<<<<<<< HEAD
-      def firelens_configuration_schema
-        Schema::Structure.new.tap do |struct|
-          struct.member(:type, Schema::String.new)
-          struct.member(:options, Schema::Nullable.new(Schema::Table.new(Schema::String.new, Schema::String.new)))
-=======
       def resource_requirement_schema
         Schema::Structure.new.tap do |struct|
           struct.member(:type, Schema::String.new)
           struct.member(:value, Schema::String.new)
->>>>>>> 1c25f8efe428640b91e25f3301c96631eefe2582
+        end
+      end
+
+      def firelens_configuration_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:type, Schema::String.new)
+          struct.member(:options, Schema::Nullable.new(Schema::Table.new(Schema::String.new, Schema::String.new)))
         end
       end
     end
