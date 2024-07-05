@@ -100,6 +100,12 @@ module Hako
         {
           log_driver: conf.fetch('log_driver'),
           options: conf.fetch('options'),
+          secret_options: conf.key?('secrets') ? conf.fetch('secrets').map do |secret|
+              {
+                name: secret.fetch('name'),
+                value_from: secret.fetch('value_from'),
+              }
+            end : nil
         }
       end
     end
@@ -231,6 +237,17 @@ module Hako
             value: rr.fetch('value'),
           }
         end
+      end
+    end
+
+    # @return [Hash, nil]
+    def firelens_configuration
+      if @definition.key?('firelens_configuration')
+        conf = @definition['firelens_configuration']
+        {
+          type: conf.fetch('type'),
+          options: conf.fetch('options', nil),
+        }
       end
     end
 
